@@ -1,10 +1,11 @@
 import axios from "axios";
 
+// Base URL from environment variable, fallback to localhost
 const API = axios.create({
-  baseURL: "http://localhost:5000/api", // backend server
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
 });
 
-// Interceptor to attach token (optional, for protected routes later)
+// Interceptor to attach token (for protected routes)
 API.interceptors.request.use((req) => {
   const token = localStorage.getItem("token");
   if (token) {
