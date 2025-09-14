@@ -7,9 +7,11 @@ export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Read user info from localStorage
+    // Load user info from localStorage on app start
     const storedUser = localStorage.getItem("user");
-    if (storedUser) {
+    const token = localStorage.getItem("token");
+
+    if (storedUser && token) {
       setUser(JSON.parse(storedUser));
     }
   }, []);
@@ -22,13 +24,15 @@ export const UserProvider = ({ children }) => {
     localStorage.setItem("role", userData.role || "");
   };
 
-  const logout = () => {
+  const logout = (navigateTo = "/login") => {
     setUser(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     localStorage.removeItem("role");
-    // Removed window.location.href to make logout SPA-friendly
-    // Navigation will now be handled in the component
+    // SPA-friendly navigation (optional)
+    if (navigateTo) {
+      window.location.href = navigateTo; // or use react-router navigate in component
+    }
   };
 
   return (

@@ -4,11 +4,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { FiMail, FiLock } from "react-icons/fi";
 import { motion } from "framer-motion";
 import API from "../api";
-import { UserContext } from "../context/UserContext"; // <-- import context
+import { UserContext } from "../context/UserContext";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { loginUser } = useContext(UserContext); // <-- use loginUser from context
+  const { loginUser } = useContext(UserContext);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,7 +19,10 @@ export default function Login() {
     try {
       const res = await API.post("/auth/login", { email, password });
 
-      // Use context to update the logged-in user
+      // Save token to localStorage for persistent auth
+      localStorage.setItem("token", res.data.token);
+
+      // Update context with user info
       loginUser({
         name: res.data.user.name,
         email: res.data.user.email,
@@ -50,6 +53,7 @@ export default function Login() {
         <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-purple-600 rounded-full mix-blend-multiply filter blur-2xl opacity-30 animate-blob animation-delay-2000"></div>
         <div className="absolute top-2/3 left-1/3 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-2xl opacity-30 animate-blob animation-delay-4000"></div>
       </div>
+
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}

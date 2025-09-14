@@ -1,3 +1,4 @@
+// src/pages/SignUp.jsx
 import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiInfo, FiUser, FiMail, FiLock, FiKey } from "react-icons/fi";
@@ -14,7 +15,6 @@ export default function SignUp() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("user");
   const [secretKey, setSecretKey] = useState("");
-  const [showSecret, setShowSecret] = useState(false);
   const [tooltipVisible, setTooltipVisible] = useState(false);
   const [error, setError] = useState("");
 
@@ -33,7 +33,10 @@ export default function SignUp() {
         res = await API.post("/auth/signup", { name, email, password });
       }
 
-      // Use context to update logged-in user
+      // Save token to localStorage
+      localStorage.setItem("token", res.data.token);
+
+      // Update context with user info
       loginUser({
         name: res.data.user.name,
         email: res.data.user.email,
@@ -41,7 +44,7 @@ export default function SignUp() {
         token: res.data.token,
       });
 
-      // Navigate after signup
+      // Navigate based on role
       if (res.data.user.role === "admin") {
         navigate("/admin-dashboard");
       } else {
@@ -59,7 +62,6 @@ export default function SignUp() {
 
   return (
     <div className="min-h-dvh flex items-center justify-center bg-gray-950 p-4 relative">
-      {/* Background blobs */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-2xl opacity-30 animate-blob"></div>
         <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-indigo-600 rounded-full mix-blend-multiply filter blur-2xl opacity-30 animate-blob animation-delay-2000"></div>
