@@ -8,20 +8,25 @@ import jwt from "jsonwebtoken";
 // =======================
 // User Signup (role: user only)
 // =======================
+import { OAuth2Client } from "google-auth-library";
+
+// =======================
+// User Signup (role: user only)
+// =======================
 export const signup = async (req, res) => {
-  const { name, email, password } = req.body; // role removed
+  const { name, email, password } = req.body;
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser)
       return res.status(400).json({ message: "Email already exists" });
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await User.create({
       name,
       email,
       password: hashedPassword,
-      role: "user", // always user
+      role: "user", // Default is always user
     });
 
     const token = jwt.sign(
@@ -46,58 +51,85 @@ export const signup = async (req, res) => {
 };
 
 // =======================
-// Secure Admin Creation
+// Google Login
 // =======================
-export const createAdmin = async (req, res) => {
-  const { name, email, password, secret } = req.body;
-
-  if (secret !== process.env.ADMIN_CREATION_SECRET) {
-    return res.status(403).json({ message: "Unauthorized: invalid admin secret" });
-  }
-
+export const googleLogin = async (req, res) => {
+  const { credential } = req.body;
   try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser)
-      return res.status(400).json({ message: "Email already exists" });
-
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    const newAdmin = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      role: "admin",
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    // Verify the Google token
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
     });
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture: avatar } = payload;
+
+    // Check if user already exists
+    let user = await User.findOne({ email });
+
+    if (user) {
+      // If user exists but doesn't have googleId, update it
+      if (!user.googleId) {
+        user.googleId = googleId;
+        user.avatar = avatar;
+        await user.save();
+      }
+    } else {
+      // Create new user if they don't exist
+      user = await User.create({
+        name,
+        email,
+        googleId,
+        avatar,
+        role: "user", // Default to user
+      });
+    }
 
     const token = jwt.sign(
-      { id: newAdmin._id, role: newAdmin.role },
+      { id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
-    res.status(201).json({
-      message: "Admin created successfully",
+    // Record login history
+    LoginHistory.create({
+      user: user._id,
+      ip: req.ip,
+    }).catch(err => console.error("Failed to record login history:", err));
+
+    res.status(200).json({
+      message: "Google Login successful",
       user: {
-        id: newAdmin._id,
-        name: newAdmin.name,
-        email: newAdmin.email,
-        role: newAdmin.role,
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
       },
       token,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    console.error("Google Auth error:", error);
+    res.status(401).json({ message: "Google authentication failed", error });
   }
 };
 
 // =======================
-// Login
+// Login (Standard)
 // =======================
 export const login = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
+
+    // If user registered with Google and has no password
+    if (user.googleId && !user.password) {
+      return res.status(400).json({ 
+        message: "This account is linked with Google. Please use 'Sign in with Google'." 
+      });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
@@ -109,10 +141,10 @@ export const login = async (req, res) => {
     );
 
     // Record login history
-    await LoginHistory.create({
+    LoginHistory.create({
       user: user._id,
       ip: req.ip,
-    });
+    }).catch(err => console.error("Failed to record login history:", err));
 
     res.status(200).json({
       message: "Login successful",

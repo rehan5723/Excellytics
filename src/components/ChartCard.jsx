@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import Card from "./Card";
 import Select from "./Select";
 import MultiCheckbox from "./MultiCheckbox";
-import { BarChart3, LineChart, PieChart, ScatterChart, AreaChart, Box } from "lucide-react";
+import { BarChart3, LineChart, PieChart, ScatterChart, AreaChart, Box, Palette } from "lucide-react";
 
 /**
  * ChartCard component – provides a UI to build charts by selecting chart type, X axis, and Y series.
@@ -16,12 +16,14 @@ import { BarChart3, LineChart, PieChart, ScatterChart, AreaChart, Box } from "lu
  * - setXField (func): Setter function to update X-axis field.
  * - yFields (array of strings): Currently selected Y-axis series.
  * - setYFields (func): Setter function to update Y-axis series.
- * - columns (array): All available column options for X-axis.
- * - numericColumns (array): All available numeric columns for Y-axis.
+ * - columns (array): All available column options for X-axis (strings or {label,value}).
+ * - numericColumns (array): All available numeric columns for Y-axis (strings or {label,value}).
  */
 export default function ChartCard({
   chartType,
   setChartType,
+  chartColor,
+  setChartColor,
   xField,
   setXField,
   yFields,
@@ -29,6 +31,14 @@ export default function ChartCard({
   columns,
   numericColumns,
 }) {
+  const colorPresets = [
+    { name: "Indigo", value: "#6366f1" },
+    { name: "Emerald", value: "#10b981" },
+    { name: "Rose", value: "#f43f5e" },
+    { name: "Amber", value: "#f59e0b" },
+    { name: "Sky", value: "#0ea5e9" },
+    { name: "Violet", value: "#8b5cf6" },
+  ];
   // Memoize chart type options to avoid unnecessary re-renders
   const chartOptions = useMemo(
     () => [
@@ -42,6 +52,13 @@ export default function ChartCard({
     ],
     []
   );
+
+  // Normalize numericColumns to plain string array for MultiCheckbox
+  const numericOptions = useMemo(() => {
+    return (numericColumns || []).map((c) =>
+      typeof c === "object" && c !== null ? c.value || c.label : String(c)
+    );
+  }, [numericColumns]);
 
   // Handle Y-axis selection (limit max 3 series)
   const handleYFieldChange = useCallback(
@@ -58,6 +75,14 @@ export default function ChartCard({
   return (
     <Card title="Chart Builder" icon={BarChart3}>
       <div className="space-y-6">
+        {/* Color Theme Selection */}
+        <Select
+          label="Color Theme"
+          value={chartColor}
+          onChange={setChartColor}
+          options={colorPresets.map(c => ({ label: c.name, value: c.value }))}
+        />
+
         {/* Chart Type Selection */}
         <section aria-labelledby="chart-type-label">
           <div
@@ -109,7 +134,7 @@ export default function ChartCard({
           <MultiCheckbox
             values={yFields}
             onChange={handleYFieldChange}
-            options={numericColumns}
+            options={numericOptions}
           />
           <div className="text-xs text-gray-500 mt-1 italic">
             You can select up to 3 series.
@@ -120,26 +145,18 @@ export default function ChartCard({
   );
 }
 
-/* ✅ PropTypes ensure proper usage of props */
+/* ✅ PropTypes – accept both string arrays and object arrays */
 ChartCard.propTypes = {
   chartType: PropTypes.string.isRequired,
   setChartType: PropTypes.func.isRequired,
+  chartColor: PropTypes.string,
+  setChartColor: PropTypes.func.isRequired,
   xField: PropTypes.string,
   setXField: PropTypes.func.isRequired,
   yFields: PropTypes.arrayOf(PropTypes.string).isRequired,
   setYFields: PropTypes.func.isRequired,
-  columns: PropTypes.arrayOf(
-    PropTypes.shape({
-      label: PropTypes.string,
-      value: PropTypes.string,
-    })
-  ).isRequired,
-  numericColumns: PropTypes.arrayOf(
-    PropTypes.shape({
-      label: PropTypes.string,
-      value: PropTypes.string,
-    })
-  ).isRequired,
+  columns: PropTypes.array.isRequired,
+  numericColumns: PropTypes.array.isRequired,
 };
 
 /* ✅ Default props for optional fields */

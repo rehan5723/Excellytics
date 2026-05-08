@@ -11,9 +11,8 @@
 // router.get("/all",protect,getAllFiles);
 // export default router;
 
-// routes/authRoutes.js
 import express from "express";
-import { signup, login, createAdmin, getMe } from "../controllers/authController.js";
+import { signup, login, googleLogin, getMe } from "../controllers/authController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 import { getAllFiles } from "../controllers/spreadsheetController.js";
 
@@ -22,7 +21,7 @@ const router = express.Router();
 // Public routes
 router.post("/signup", signup);            // normal user signup
 router.post("/login", login);              // login
-router.post("/create-admin", createAdmin); // admin signup with secret
+router.post("/google-login", googleLogin); // google login
 
 // Protected routes
 router.get("/me", protect, getMe);         

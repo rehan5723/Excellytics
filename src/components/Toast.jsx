@@ -2,7 +2,15 @@
 import React from "react";
 import { X, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 
-export default function Toast({ toast, onClose }) {
+/**
+ * Toast component – shows notification messages.
+ *
+ * Props:
+ * - toast: { show: boolean, message: string, type: "info"|"success"|"error" }
+ * - setToast: function to update toast state (used for closing)
+ * - onClose: (legacy) function called on close — used as fallback if setToast not provided
+ */
+export default function Toast({ toast, setToast, onClose }) {
   const getIcon = () => {
     switch (toast.type) {
       case "success": return <CheckCircle className="h-5 w-5" />;
@@ -24,14 +32,22 @@ export default function Toast({ toast, onClose }) {
 
   if (!toast.show) return null;
 
+  const handleClose = () => {
+    if (setToast) {
+      setToast({ show: false, message: "", type: "info" });
+    } else if (onClose) {
+      onClose();
+    }
+  };
+
   return (
     <div
-      className={`fixed top-4 right-4 z-50 flex items-center gap-3 p-4 rounded-lg border shadow-lg ${getBgColor()} transition-all duration-300`}
+      className={`fixed top-4 right-4 z-50 flex items-center gap-3 p-4 rounded-lg border shadow-lg ${getBgColor()} transition-all duration-300 animate-slide-in`}
     >
       {getIcon()}
       <span className="text-sm font-medium">{toast.message}</span>
       <button
-        onClick={onClose}
+        onClick={handleClose}
         className="ml-2 hover:opacity-70 transition-opacity"
       >
         <X className="h-4 w-4" />

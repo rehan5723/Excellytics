@@ -17,7 +17,7 @@ export const UserProvider = ({ children }) => {
   }, []);
 
   const loginUser = (userData) => {
-    // userData: { name, email, role, token }
+    // userData: { name, email, role, token, avatar }
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("token", userData.token || "");
@@ -31,7 +31,7 @@ export const UserProvider = ({ children }) => {
     localStorage.removeItem("role");
     // SPA-friendly navigation (optional)
     if (navigateTo) {
-      window.location.href = navigateTo; // or use react-router navigate in component
+      window.location.href = navigateTo;
     }
   };
 

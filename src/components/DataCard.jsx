@@ -47,7 +47,7 @@ export default function DataCard({ fileName, rows, onReplace }) {
             {/* Hidden file input */}
             <input
               type="file"
-              accept=".xls,.xlsx"
+              accept=".xls,.xlsx,.csv"
               className="hidden"
               onChange={handleFileChange}
             />

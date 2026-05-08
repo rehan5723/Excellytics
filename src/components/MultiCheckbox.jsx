@@ -5,11 +5,19 @@ import React from "react";
  * MultiCheckbox component
  * 
  * Props:
- * - values: array of currently selected values
+ * - values: array of currently selected values (strings)
  * - onChange: callback invoked with updated values when a toggle happens
- * - options: array of all available options
+ * - options: array of all available options (strings or {label, value} objects)
  */
 export default function MultiCheckbox({ values = [], onChange, options = [] }) {
+  // Normalize options to plain strings
+  const normalizedOptions = options.map((opt) => {
+    if (typeof opt === "object" && opt !== null && "value" in opt) {
+      return String(opt.value);
+    }
+    return String(opt);
+  });
+
   // Toggle a value on/off
   const toggle = (val) => {
     const updated = values.includes(val)
@@ -18,21 +26,21 @@ export default function MultiCheckbox({ values = [], onChange, options = [] }) {
     onChange(updated);
   };
 
-  if (!options.length) {
+  if (!normalizedOptions.length) {
     return (
       <div className="text-sm text-gray-500 dark:text-gray-400">
-        No options available.
+        No numeric columns available.
       </div>
     );
   }
 
   return (
     <div className="flex flex-wrap gap-2">
-      {options.map((opt) => {
+      {normalizedOptions.map((opt) => {
         const selected = values.includes(opt);
         return (
           <button
-            key={String(opt)}
+            key={opt}
             type="button"
             onClick={() => toggle(opt)}
             aria-pressed={selected}
@@ -40,11 +48,11 @@ export default function MultiCheckbox({ values = [], onChange, options = [] }) {
               focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500
               ${
                 selected
-                  ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white"
+                  ? "bg-indigo-600 text-white border-indigo-600 dark:bg-indigo-500 dark:border-indigo-500"
                   : "bg-white/70 dark:bg-gray-900/60 text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
               }`}
           >
-            {String(opt)}
+            {opt}
           </button>
         );
       })}

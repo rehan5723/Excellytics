@@ -15,32 +15,22 @@ import PropTypes from "prop-types";
 export default function Card({ title, icon: Icon, children, actions, className = "" }) {
   return (
     <section
-      // Accessible label for screen readers
       aria-label={title || "Card"}
-      // Tailwind CSS classes for styling, rounded corners, shadow, hover, and padding
-      className={`rounded-2xl border border-gray-800 
-          bg-gray-900/60 backdrop-blur shadow-xl p-5 
-          transition-colors duration-200 hover:bg-gray-800/60 
-          ${className}`}
+      className={`premium-card p-6 overflow-hidden ${className}`}
     >
-      {/* Render header only if title or actions exist */}
       {(title || actions) && (
         <header className="flex items-center justify-between mb-4">
-          {/* Left section: icon + title */}
           <div className="flex items-center gap-2">
-            {Icon && <Icon className="h-5 w-5 text-gray-500" />} {/* Optional icon */}
+            {Icon && <Icon className="h-5 w-5 text-gray-500" />}
             {title && (
-              <h3 className="text-lg font-semibold text-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 {title}
               </h3>
             )}
           </div>
-          {/* Right section: optional actions */}
           {actions}
         </header>
       )}
-
-      {/* Main content of the card */}
       {children}
     </section>
   );
